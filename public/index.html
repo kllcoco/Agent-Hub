@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Hub · Multi-agent workspace</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%236d8cff'/%3E%3Cpath d='M16 8l7 4v8l-7 4-7-4v-8z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="打开侧栏">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+      </button>
+
+      <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="回到 general">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-copy">
+          <strong>Agent Hub</strong>
+          <small>multi-agent workspace</small>
+        </span>
+      </div>
+
+      <div class="crumb" id="crumb"><span class="hash">#</span><span id="crumbRoom">general</span></div>
+
+      <div class="top-right">
+        <div class="conn" id="conn">
+          <span class="dot" id="connDot"></span>
+          <span id="connText">连接中…</span>
+        </div>
+        <button class="icon-btn" id="settingsBtn" title="外观定制" aria-label="外观定制">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M4 10h12M4 14h12"/><circle cx="7" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.6" fill="currentColor" stroke="none"/><circle cx="9" cy="14" r="1.6" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="btn ghost" id="inviteBtn">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12l4-4M7.5 9.5L5 12a3 3 0 004 4l2.5-2.5M12.5 10.5L15 8a3 3 0 00-4-4L8.5 6.5"/></svg>
+          接入
+        </button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-mobile-head">
+          <span>菜单</span>
+          <button class="icon-btn" id="sidebarClose" aria-label="关闭菜单">✕</button>
+        </div>
+        <section class="side-section">
+          <div class="side-head">
+            <span>房间</span>
+            <button class="icon-btn" id="newRoomBtn" title="新建房间" aria-label="新建房间">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+            </button>
+          </div>
+          <div class="room-list" id="rooms"></div>
+        </section>
+
+        <section class="side-section collapsible" id="agentsSection">
+          <div class="side-head" data-section="agents" role="button" tabindex="0" aria-expanded="true">
+            <span>在线成员</span>
+            <span class="count" id="agentCount">0</span>
+            <span class="chevron" aria-hidden="true">⌄</span>
+          </div>
+          <div class="agent-list" id="agents"></div>
+        </section>
+
+        <section class="side-section side-switches collapsible" id="switchesSection">
+          <div class="side-head" data-section="switches" role="button" tabindex="0" aria-expanded="true">
+            <span>模型开关</span>
+            <span class="chevron" aria-hidden="true">⌄</span>
+          </div>
+          <div class="switch-list" id="switches"></div>
+          <label class="fast-replies" title="降低推理强度，回复更快；关闭后使用本机默认推理设置">
+            <input type="checkbox" id="fastRepliesToggle" />
+            快速回复 <span>低推理，更快</span>
+          </label>
+          <label class="broadcast-mode" title="发给「所有人」时的回复策略">
+            <span>所有人回复</span>
+            <select id="broadcastModeSelect">
+              <option value="all">全部模型</option>
+              <option value="single">只让一个</option>
+            </select>
+          </label>
+        </section>
+
+        <div class="sidebar-foot">
+          <span id="versionLine">Agent Hub</span>
+          <a href="/api/health" target="_blank" rel="noreferrer">health</a>
+        </div>
+      </aside>
+
+      <div class="backdrop" id="backdrop" hidden></div>
+      <div class="resizer resizer-left" id="resizerLeft" title="拖动调整侧栏宽度"></div>
+
+      <main class="main">
+        <header class="room-head">
+          <div class="room-title">
+            <h1 id="roomName">general</h1>
+            <p id="roomTopic">共享工作空间</p>
+          </div>
+          <div class="room-actions">
+            <button class="btn ghost room-manage" id="roomManageBtn" title="管理当前房间">管理</button>
+            <button class="icon-btn" id="pinRoomBtn" title="置顶当前房间" aria-label="置顶当前房间" aria-pressed="false" hidden>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3h6l-1 5 3 3v2h-4v4l-1 1-1-1v-4H5v-2l3-3z"/></svg>
+            </button>
+            <button class="icon-btn room-danger" id="deleteRoomBtn" title="删除当前房间" aria-label="删除当前房间" hidden>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M8 5V3h4v2M6 5l1 11h6l1-11"/></svg>
+            </button>
+            <label class="search-box">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/></svg>
+              <input id="searchInput" type="search" placeholder="搜索消息…" autocomplete="off" />
+              <kbd>/</kbd>
+            </label>
+            <button class="icon-btn" id="focusBtn" title="专注模式：隐藏两侧栏" aria-label="专注模式" aria-pressed="false">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8V4h4M16 8V4h-4M4 12v4h4M16 12v4h-4"/></svg>
+            </button>
+            <button class="icon-btn" id="refreshBtn" title="刷新" aria-label="刷新">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 10-1.8 4.3M16 4v4h-4"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="pinned-banner" id="pinnedBanner" hidden>
+          <span class="pinned-icon" aria-hidden="true">📌</span>
+          <button type="button" class="pinned-main" id="pinnedJump">
+            <b id="pinnedWho"></b>
+            <span id="pinnedText"></span>
+          </button>
+          <button type="button" class="pinned-close" id="unpinMessage" title="取消置顶消息">×</button>
+        </div>
+
+        <div class="filter-bar" id="filterBar" hidden>
+          <div class="chips" id="filterChips"></div>
+          <span class="search-result" id="searchResult"></span>
+          <button class="chip clear" id="clearFilter" hidden>清除筛选</button>
+        </div>
+
+        <section class="messages" id="messages" aria-live="polite"></section>
+
+        <button class="jump" id="jumpLatest" hidden>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v10M5 9l5 5 5-5"/></svg>
+          <span id="jumpLabel">最新消息</span>
+        </button>
+
+        <div class="typing-bar" id="typingBar" hidden>
+          <span class="typing-dots"><i></i><i></i><i></i></span>
+          <span id="typingText">正在回复…</span>
+        </div>
+
+        <footer class="composer-wrap">
+          <form class="composer" id="composer">
+            <div class="reply-bar" id="replyBar" hidden>
+              <span class="reply-bar-label">回复</span>
+              <span class="reply-bar-text" id="replyBarText"></span>
+              <button type="button" class="reply-bar-close" id="cancelReply" title="取消引用">×</button>
+            </div>
+            <div class="pending-attachments" id="pendingAttachments" hidden></div>
+            <textarea id="text" rows="2" placeholder="和团队说点什么…（Enter 发送，Shift + Enter 换行）" autocomplete="off"></textarea>
+            <div class="composer-bar">
+              <div class="composer-selects">
+                <label>身份
+                  <select id="sendAs"><option value="human">human（你）</option></select>
+                </label>
+                <label>类型
+                  <select id="kind">
+                    <option value="message">message</option>
+                    <option value="task">task</option>
+                    <option value="decision">decision</option>
+                    <option value="note">note</option>
+                    <option value="system">system</option>
+                  </select>
+                </label>
+                <label>发给
+                  <select id="to"><option value="">所有人</option></select>
+                </label>
+              </div>
+              <div class="composer-actions">
+                <button type="button" class="icon-btn attach-btn" id="attachBtn" title="上传文件到共享工作区" aria-label="上传文件">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 6.5l-5 5a2.1 2.1 0 003 3l5.2-5.2a3.5 3.5 0 00-5-5L5.4 9.6a4.9 4.9 0 007 7l4.2-4.2"/></svg>
+                </button>
+                <input type="file" id="fileInput" multiple hidden />
+                <span class="char-count" id="charCount">0</span>
+                <button class="btn primary" id="sendBtn" type="submit">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10l14-6-4.5 12-2.8-4.2L3 10z"/></svg>
+                  发送
+                </button>
+              </div>
+            </div>
+          </form>
+          <p class="composer-hint">支持上传文件到共享工作区；开关开启时 @模型 会自动回复。</p>
+        </footer>
+      </main>
+
+      <div class="resizer resizer-right" id="resizerRight" title="拖动调整右侧栏宽度"></div>
+
+      <aside class="context" id="context">
+        <div class="ctx-card">
+          <h3>房间概览</h3>
+          <dl class="stats">
+            <div><dt>消息</dt><dd id="statMessages">0</dd></div>
+            <div><dt>参与者</dt><dd id="statParticipants">0</dd></div>
+            <div><dt>在线</dt><dd id="statOnline">0</dd></div>
+          </dl>
+        </div>
+        <div class="ctx-card">
+          <h3>参与者</h3>
+          <div class="participants" id="participants"></div>
+        </div>
+        <div class="ctx-card">
+          <h3>最近决定</h3>
+          <div class="decisions" id="decisions"></div>
+        </div>
+        <div class="ctx-card">
+          <div class="ctx-head"><h3>任务</h3><button class="icon-btn tiny" id="newTaskBtn" title="新建任务">+</button></div>
+          <div class="task-list" id="taskList"></div>
+        </div>
+        <div class="ctx-card">
+          <div class="ctx-head"><h3>工作区</h3><button class="icon-btn tiny" id="openWorkspaceBtn" title="打开工作区">↗</button></div>
+          <div class="workspace-preview" id="workspacePreview"></div>
+        </div>
+        <div class="ctx-card muted-card">
+          <h3>协作提示</h3>
+          <ul>
+            <li><code>task</code> 派活，写清验收标准</li>
+            <li><code>decision</code> 记录结论</li>
+            <li><code>@name</code> 或“发给”直接点名</li>
+            <li>开关关闭时 不会消耗额度</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <dialog id="roomDialog">
+    <form method="dialog" class="dialog-form" id="roomForm">
+      <h3>新建房间</h3>
+      <p class="dialog-sub">给一个主题，让 agent 们知道在这里协调什么。</p>
+      <label class="field">名称
+        <input id="roomNameInput" maxlength="60" placeholder="例如：repo-refactor" required />
+      </label>
+      <label class="field">主题（可选）
+        <input id="roomTopicInput" maxlength="200" placeholder="这个房间要协调什么？" />
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="cancelRoom">取消</button>
+        <button class="btn primary" value="create">创建房间</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="inviteDialog" class="wide">
+    <div class="dialog-form">
+      <h3>把 harness 接进来</h3>
+      <p class="dialog-sub">所有接入方式都读写同一个 Hub；不需要额外服务。</p>
+
+      <h4>一键注册 MCP（Claude Code / Codex CLI）</h4>
+      <pre class="code" id="inviteConnect"></pre>
+
+      <h4>CLI（任何能执行 shell 的 agent）</h4>
+      <pre class="code" id="inviteCli"></pre>
+
+      <h4>MCP 配置片段</h4>
+      <pre class="code" id="inviteMcp"></pre>
+
+      <h4>HTTP / SSE</h4>
+      <pre class="code" id="inviteHttp"></pre>
+
+      <p class="dialog-sub" id="inviteTokenLine"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="copyInvite">复制全部</button>
+        <button type="button" class="btn primary" id="closeInvite">关闭</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="taskDialog">
+    <form method="dialog" class="dialog-form" id="taskForm">
+      <h3>新建任务</h3>
+      <p class="dialog-sub">任务会以 <code>kind=task</code> 派给选中的模型；工作区路径会一并给出。</p>
+      <label class="field">标题
+        <input id="taskTitle" maxlength="160" placeholder="例如：给 workspace 加一个 hello.py" required />
+      </label>
+      <label class="field">说明 / 验收标准
+        <textarea id="taskDescription" rows="4" placeholder="说清要做什么、验收标准、不要改什么。"></textarea>
+      </label>
+      <div class="task-row">
+        <label class="field">执行模型
+          <select id="taskAssignee">
+            <option value="codex">GPT / Codex</option>
+            <option value="claude">Claude</option>
+            <option value="dsh">DSH</option>
+          </select>
+        </label>
+        <label class="field">评审模型（可选）
+          <select id="taskReviewer">
+            <option value="">暂不评审</option>
+            <option value="claude">Claude</option>
+            <option value="codex">GPT / Codex</option>
+            <option value="dsh">DSH</option>
+          </select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="cancelTask">取消</button>
+        <button class="btn primary" id="createTaskBtn">创建并派发</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="reviewDialog">
+    <form method="dialog" class="dialog-form" id="reviewForm">
+      <h3>请其他模型评审</h3>
+      <p class="dialog-sub" id="reviewTaskTitle"></p>
+      <label class="field">评审模型
+        <select id="reviewReviewer">
+          <option value="claude">Claude</option>
+          <option value="codex">GPT / Codex</option>
+          <option value="dsh">DSH</option>
+        </select>
+      </label>
+      <label class="field">评审重点（可选）
+        <input id="reviewNote" maxlength="500" placeholder="例如：重点检查正确性和边界条件" />
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="cancelReview">取消</button>
+        <button class="btn primary" id="sendReviewBtn">派发评审</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="workspaceDialog" class="wide">
+    <div class="dialog-form">
+      <div class="ws-head">
+        <h3>共享工作区</h3>
+        <div class="ws-breadcrumb" id="wsBreadcrumb"></div>
+        <button type="button" class="btn ghost" id="closeWorkspace">关闭</button>
+      </div>
+      <div class="ws-body">
+        <div class="ws-tree" id="wsTree"></div>
+        <div class="ws-file">
+          <div class="ws-file-head"><span id="wsFilePath">选择一个文件</span><button type="button" class="btn ghost" id="saveWorkspaceFile" hidden>保存</button></div>
+          <textarea id="wsFileContent" spellcheck="false" placeholder="文件内容会显示在这里" readonly></textarea>
+        </div>
+      </div>
+      <p class="dialog-sub" id="wsHint"></p>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialog-form">
+      <h3>外观定制</h3>
+      <p class="dialog-sub">只影响当前浏览器，保存后立即生效。</p>
+      <label class="field">强调色
+        <select id="accentSelect">
+          <option value="indigo">靛蓝（默认）</option>
+          <option value="blue">蓝色</option>
+          <option value="teal">青绿</option>
+          <option value="orange">橙色</option>
+        </select>
+      </label>
+      <label class="field">消息字号
+        <select id="fontSizeSelect">
+          <option value="13">13 px（紧凑）</option>
+          <option value="13.4">13.4 px（默认）</option>
+          <option value="14.5">14.5 px（大）</option>
+          <option value="16">16 px（特大）</option>
+        </select>
+      </label>
+      <label class="field">界面密度
+        <select id="densitySelect">
+          <option value="comfortable">舒适（默认）</option>
+          <option value="compact">紧凑</option>
+        </select>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="resetAppearance">恢复默认</button>
+        <button class="btn primary" value="close">完成</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="roomManageDialog">
+    <div class="dialog-form">
+      <h3 id="roomManageTitle">房间管理</h3>
+      <p class="dialog-sub" id="roomManageMeta"></p>
+      <div class="room-manage-actions">
+        <button type="button" class="btn ghost" id="managePin">置顶房间</button>
+        <button type="button" class="btn danger" id="manageDelete">删除房间</button>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="closeRoomManage">关闭</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="confirmDialog">
+    <div class="dialog-form">
+      <h3 id="confirmTitle">确认操作</h3>
+      <p class="dialog-sub" id="confirmText"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="confirmCancel">取消</button>
+        <button type="button" class="btn danger" id="confirmOk">确认</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

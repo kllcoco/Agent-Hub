@@ -1,0 +1,20 @@
+# Agent Hub MCP row for DSH.
+# Replace <path-to-agent-hub> with the absolute path to this repository
+# before installing the bundle, e.g. C:/Users/me/Agent-Hub
+- insert:
+    - id: agent-hub-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: agent-hub
+        transport: stdio
+        command: 'C:/Program Files/nodejs/node.exe'
+        args:
+          - '<path-to-agent-hub>/mcp.mjs'
+          - '--agent'
+          - 'dsh'
+          - '--url'
+          - 'http://127.0.0.1:8787'
+        cwd: '<path-to-agent-hub>'
+        failOnStartupError: false
+        reconnect:
+          enabled: true

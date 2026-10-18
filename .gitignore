@@ -1,0 +1,7 @@
+data/
+workspace/*
+!workspace/README.md
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

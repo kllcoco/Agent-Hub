@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Agent Hub MCP",
+    "description": "把 Harness 以 dsh 身份接入本地 Agent Hub 协作空间。"
+  }
+}

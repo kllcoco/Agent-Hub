@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Agent Hub MCP",
+    "description": "Connects the Harness to the local Agent Hub coordination space as the dsh participant."
+  }
+}

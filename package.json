@@ -1,0 +1,23 @@
+{
+  "name": "agent-hub",
+  "version": "1.0.0",
+  "description": "A local-first multi-agent coordination space with a live web dashboard, MCP and HTTP APIs.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kllcoco/Agent-Hub.git"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "cli": "node cli.mjs",
+    "connect": "node connect.mjs",
+    "check": "node check.mjs",
+    "desktop": "node build-desktop.mjs",
+    "worker": "node worker.mjs",
+    "test": "node test/e2e.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
